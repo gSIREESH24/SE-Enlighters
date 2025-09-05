@@ -26,7 +26,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   final StorageService _storageService = StorageService();
 
-  // ✅ Store last query directly
+
   String? _lastQuery;
 
   @override
@@ -80,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       if (_recentSearches.length > 10) {
         _recentSearches = _recentSearches.sublist(0, 10);
       }
-      _lastQuery = query; // ✅ Save last query
+      _lastQuery = query;
     });
 
     await FirebaseFirestore.instance.collection('users').doc(uid).set(

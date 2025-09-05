@@ -39,7 +39,7 @@ class _SignupPageState extends State<SignupPage> {
 
       if (!mounted) return;
 
-      // ✅ After sign up → go to Login page
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const LoginPage()),

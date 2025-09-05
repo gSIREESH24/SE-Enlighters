@@ -24,20 +24,20 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _startAnimationAndNavigate() async {
-    // Fade in app name after 0.5s
+
     Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted) setState(() => _opacity = 1.0);
     });
 
-    // Wait for splash duration
+
     await Future.delayed(const Duration(seconds: 3));
 
     if (!mounted) return;
 
-    // Check if user is logged in
+
     final currentUser = FirebaseAuth.instance.currentUser;
 
-    // Navigate accordingly
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -75,7 +75,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 height: 240,
               ),
               const SizedBox(height: 20),
-              // Animated app name
+
               AnimatedOpacity(
                 opacity: _opacity,
                 duration: const Duration(seconds: 2),

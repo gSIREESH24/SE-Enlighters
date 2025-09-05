@@ -10,20 +10,20 @@ import 'services/storage_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase
+
   await Firebase.initializeApp();
 
-  // Initialize storage service
+
   final storageService = StorageService();
   await storageService.init();
 
-  // Initialize ThemeProvider
+
   final themeProvider = ThemeProvider(storageService);
   await themeProvider.loadTheme();
 
-  // Initialize AuthProvider
+
   final authProvider = AuthProvider();
-  await authProvider.loadUser(); // optional async setup
+  await authProvider.loadUser();
 
   runApp(
     MultiProvider(

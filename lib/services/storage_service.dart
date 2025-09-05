@@ -15,11 +15,11 @@ class StorageService {
     _prefs = await SharedPreferences.getInstance();
   }
 
-  // Theme
+
   Future<void> setDarkMode(bool value) => _prefs.setBool(_darkModeKey, value);
   Future<bool> isDarkMode() async => _prefs.getBool(_darkModeKey) ?? false;
 
-  // Auth
+
   Future<void> setLoggedIn(bool value) => _prefs.setBool(_loggedInKey, value);
   bool isLoggedIn() => _prefs.getBool(_loggedInKey) ?? false;
 
@@ -32,7 +32,7 @@ class StorageService {
   Future<void> setUserPassword(String pass) => _prefs.setString(_passwordKey, pass);
   String? getUserPassword() => _prefs.getString(_passwordKey);
 
-  // Searches & Bookmarks
+
   Future<void> setRecentSearches(List<String> searches) => _prefs.setStringList(_recentKey, searches);
   List<String> getRecentSearches() => _prefs.getStringList(_recentKey) ?? [];
 

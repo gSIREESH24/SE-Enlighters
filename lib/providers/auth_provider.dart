@@ -6,7 +6,7 @@ class AuthProvider with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // --- Public Getters ---
+
   bool get isLoggedIn => _auth.currentUser != null;
   String get userName => _auth.currentUser?.displayName ?? '';
   String get userEmail => _auth.currentUser?.email ?? '';
@@ -19,7 +19,7 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /// ✅ Sign up new user
+
   Future<User?> signUp({
     required String name,
     required String email,
@@ -36,7 +36,7 @@ class AuthProvider with ChangeNotifier {
       if (user != null) {
         await user.updateDisplayName(name);
 
-        // Store in Firestore
+
         await _firestore.collection("users").doc(user.uid).set({
           "uid": user.uid,
           "name": name,
@@ -58,7 +58,7 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  /// ✅ Login existing user
+
   Future<User?> login(String email, String password) async {
     try {
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
@@ -73,7 +73,7 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  /// ✅ Logout
+
   Future<void> logout() async {
     await _auth.signOut();
     notifyListeners();
