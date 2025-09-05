@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "699850939921",
+    "project_id": "app-dev-se",
+    "storage_bucket": "app-dev-se.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:699850939921:android:4656ef13a09228b882dbb0",
+        "android_client_info": {
+          "package_name": "com.example.enlightnerapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAWK6e54LHwCyFmVJyW12yr4AK5LEVRsHU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:699850939921:android:bea4a198ec27fa5782dbb0",
+        "android_client_info": {
+          "package_name": "com.example.first_se"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAWK6e54LHwCyFmVJyW12yr4AK5LEVRsHU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
