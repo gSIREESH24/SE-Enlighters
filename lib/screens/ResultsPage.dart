@@ -5,6 +5,8 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:translator/translator.dart';
 import 'package:http/http.dart' as http;
 
+import 'insights_page.dart'; // Your existing InsightsPage
+
 class ResultsPage extends StatefulWidget {
   final String religionName;
   final String searchQuery;
@@ -40,17 +42,16 @@ class _ResultsPageState extends State<ResultsPage> {
   @override
   void initState() {
     super.initState();
-
     translatedResults["en"] = widget.results;
     _setupTTS();
     _fetchInsights();
   }
 
   void _setupTTS() {
-    _flutterTts.setCompletionHandler(() async {
+    _flutterTts.setCompletionHandler(() {
       if (currentChunkIndex + 1 < chunks.length && isSpeaking) {
         currentChunkIndex++;
-        await _flutterTts.speak(chunks[currentChunkIndex]);
+        _flutterTts.speak(chunks[currentChunkIndex]);
       } else {
         setState(() {
           isSpeaking = false;
@@ -92,7 +93,7 @@ class _ResultsPageState extends State<ResultsPage> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        setState(() => insightsData = data);
+        if (mounted) setState(() => insightsData = data);
       } else {
         throw Exception("Failed to fetch insights: ${response.statusCode}");
       }
@@ -102,7 +103,7 @@ class _ResultsPageState extends State<ResultsPage> {
             .showSnackBar(SnackBar(content: Text("Error fetching insights: $e")));
       }
     } finally {
-      setState(() => isLoadingInsights = false);
+      if (mounted) setState(() => isLoadingInsights = false);
     }
   }
 
@@ -123,11 +124,11 @@ class _ResultsPageState extends State<ResultsPage> {
 
   Future<void> _toggleSpeak(String text, int index) async {
     if (isSpeaking && currentlyReadingIndex == index) {
-      await _flutterTts.stop();
+      _flutterTts.stop();
       return;
     }
 
-    await _flutterTts.stop();
+    _flutterTts.stop();
 
     final ttsText = translatedResults[selectedLanguage]![index];
     chunks = ttsText.split(RegExp(r'(?<=[.?!])\s+'));
@@ -156,7 +157,7 @@ class _ResultsPageState extends State<ResultsPage> {
       currentChunkIndex = 0;
     });
 
-    await _flutterTts.speak(chunks[currentChunkIndex]);
+    _flutterTts.speak(chunks[currentChunkIndex]);
   }
 
   List<Widget> _buildHighlightedParagraphs(String text, Color normalColor) {
@@ -183,7 +184,7 @@ class _ResultsPageState extends State<ResultsPage> {
           }
 
           chunkSpans.add(TextSpan(
-            text: chunk.substring(match.start, match.end),
+            text: match.group(0), // Correct usage
             style: GoogleFonts.lato(
                 fontSize: 16, height: 1.6, color: Colors.deepOrange, fontWeight: FontWeight.bold),
           ));
@@ -212,13 +213,18 @@ class _ResultsPageState extends State<ResultsPage> {
   }
 
   @override
+  void dispose() {
+    _flutterTts.stop(); // Only stop TTS
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final normalTextColor = Theme.of(context).textTheme.bodyLarge?.color ??
         (isDarkMode ? Colors.white70 : Colors.black87);
 
     final displayResults = translatedResults[selectedLanguage] ?? widget.results;
-
     final hasRelevantData = !(displayResults.length == 1 &&
         displayResults.first == "Question Asked is Not Relevant!");
 
@@ -297,7 +303,6 @@ class _ResultsPageState extends State<ResultsPage> {
               ),
             ),
           ),
-
           if (hasRelevantData)
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -308,12 +313,20 @@ class _ResultsPageState extends State<ResultsPage> {
                 onPressed: isLoadingInsights
                     ? null
                     : () {
+                  // Stop TTS immediately
+                  _flutterTts.stop();
+                  setState(() {
+                    isSpeaking = false;
+                    currentlyReadingIndex = null;
+                    currentChunkIndex = 0;
+                    chunks = [];
+                  });
+
                   if (insightsData != null) {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) =>
-                              ComparativeInsightsPage(data: insightsData!)),
+                          builder: (context) => InsightsPage(data: insightsData!)),
                     );
                   }
                 },
@@ -323,45 +336,6 @@ class _ResultsPageState extends State<ResultsPage> {
               ),
             ),
         ],
-      ),
-    );
-  }
-}
-
-
-class ComparativeInsightsPage extends StatelessWidget {
-  final Map<String, dynamic> data;
-
-  const ComparativeInsightsPage({super.key, required this.data});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Comparative Insights")),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ListView(
-          children: [
-            Text("Topic: ${data['topic'] ?? ''}", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            ...((data['results'] ?? []) as List).map((religion) {
-              return Card(
-                margin: const EdgeInsets.symmetric(vertical: 8),
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text("${religion['religion']}", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 8),
-                      Text("${religion['overallSummary']}", style: const TextStyle(fontSize: 16)),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ],
-        ),
       ),
     );
   }
