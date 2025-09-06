@@ -27,6 +27,7 @@ Enlightener contributes to accessibility and education, aligning with:
 
 ![image alt](https://github.com/ch-sairohith/se_app_project/blob/main/GetImage.jpeg)
 
+
 ❓ FAQs & Search – Quick navigation and intelligent search for guidance.
 
 ![image alt](https://github.com/ch-sairohith/se_app_project/blob/main/GetImage(1).jpeg)
