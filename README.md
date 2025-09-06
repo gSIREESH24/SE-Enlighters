@@ -25,24 +25,45 @@ Enlightener contributes to accessibility and education, aligning with:
 
 🔐 Login & Signup – Secure email/password login, signup, and Forgot Password support.
 
-![image alt](https://github.com/ch-sairohith/se_app_project/blob/main/GetImage.jpeg)
+![image alt](https://github.com/gSIREESH24/SE-Enlighters/blob/main/Images/LoginPage.jpg)
+![image alt](https://github.com/gSIREESH24/SE-Enlighters/blob/main/Images/SignUpPage.jpg)
 
 
 ❓ FAQs & Search – Quick navigation and intelligent search for guidance.
 
-![image alt](https://github.com/ch-sairohith/se_app_project/blob/main/GetImage(1).jpeg)
+
+
+![image alt](https://github.com/gSIREESH24/SE-Enlighters/blob/main/Images/HomePage(LightTheme).jpg)
+
+
 
 📂 Navigation Menu – Access Profile, History, Settings, and Logout via hamburger menu.
 
-![image alt](https://github.com/ch-sairohith/se_app_project/blob/main/GetImage(2).jpeg)
+
+
+![image alt](https://github.com/gSIREESH24/SE-Enlighters/blob/main/Images/Recents.jpg)
+
+
 
 🌗 Dark Mode – Seamless light and dark theme toggle.
 
-![image alt](https://github.com/ch-sairohith/se_app_project/blob/main/GetImage(3).jpeg)
+
+
+![image alt](https://github.com/gSIREESH24/SE-Enlighters/blob/main/Images/HomePage(DarkTheme).jpg)
+
+
+
 
 🙏 Ask Me – Ask religion-related questions; answers sourced only from Bhagavad Gita, Bible, and Quran.
 
-![image alt](https://github.com/ch-sairohith/se_app_project/blob/main/GetImage(4).jpeg)
+
+
+
+![image alt](https://github.com/gSIREESH24/SE-Enlighters/blob/main/Images/AfterSearch.jpg)
+![image alt](https://github.com/gSIREESH24/SE-Enlighters/blob/main/Images/BackendFetching.jpg)
+![image alt](https://github.com/gSIREESH24/SE-Enlighters/blob/main/Images/VoiceCommand.jpg)
+![image alt](https://github.com/gSIREESH24/SE-Enlighters/blob/main/Images/MultiLanguage.jpg)
+![image alt](https://github.com/gSIREESH24/SE-Enlighters/blob/main/Images/Comparision.jpg)
 
 📊 Interactive Visualization – Animated loading screen → 3-colored pie chart → expandable religion-specific cards.
 
