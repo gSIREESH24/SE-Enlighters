@@ -48,6 +48,7 @@ dependencies:
   firebase_core: ^4.1.0
   flutter_tts: ^3.8.5
   translator: 1.0.4+1
+  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:
@@ -77,6 +78,7 @@ flutter:
     - assets/animations/Wave Loop.json
     - assets/animations/MaterialWaveLoading.json
     - assets/images/Background.jpg
+    - assets/images/ic_launcher_round.png
 
 
 
@@ -108,4 +110,3 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
-
