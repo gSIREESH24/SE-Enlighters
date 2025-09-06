@@ -24,9 +24,9 @@ class _SearchPageState extends State<SearchPage> {
   final StorageService _storageService = StorageService();
 
   final Map<String, double> _religionData = {
-    "Hindu": 40,
-    "Christian": 35,
-    "Islam": 25,
+    "Hindu": 33.4,
+    "Christian": 33.3,
+    "Islam": 33.3,
   };
 
   Map<String, List<String>> _structuredResults = {};
@@ -36,6 +36,8 @@ class _SearchPageState extends State<SearchPage> {
   final String hinduUrl = "https://se-app-project-backend.onrender.com/ask/gita";
   final String christianUrl = "https://se-app-project-backend.onrender.com/ask/bible";
   final String islamUrl = "https://se-app-project-backend.onrender.com/ask/quran";
+
+  final String insightsUrl = "https://se-app-project-backend.onrender.com/ask/all";
 
   @override
   void initState() {
@@ -62,9 +64,8 @@ class _SearchPageState extends State<SearchPage> {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      if (data["summary"] != "```json\n[]\n```"
-          "") return [data["summary"].toString()];
-      return ["No summary found"];
+      if (data["summary"] != "[]") return [data["summary"].toString()];
+      return ["Not Relevant Question\n\nNo summary found"];
     } else {
       throw Exception("Failed to fetch: ${response.statusCode} ${response.body}");
     }
@@ -84,6 +85,9 @@ class _SearchPageState extends State<SearchPage> {
 
   void _onSearchAction(String query) async {
     if (query.trim().isEmpty) return;
+
+    // Dismiss the keyboard
+    FocusScope.of(context).unfocus();
 
     setState(() => _isLoading = true);
 
@@ -128,76 +132,80 @@ class _SearchPageState extends State<SearchPage> {
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _controller,
-                      style: TextStyle(color: onSurfaceColor),
-                      decoration: InputDecoration(
-                        hintText: "Ask your question...",
-                        hintStyle: TextStyle(color: onSurfaceColor.withOpacity(0.6)),
-                        prefixIcon: Icon(Icons.search, color: primaryColor),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(30),
-                          borderSide: BorderSide.none,
+        child: GestureDetector(
+          // Dismiss keyboard on tapping outside
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _controller,
+                        style: TextStyle(color: onSurfaceColor),
+                        decoration: InputDecoration(
+                          hintText: "Ask your question...",
+                          hintStyle: TextStyle(color: onSurfaceColor.withOpacity(0.6)),
+                          prefixIcon: Icon(Icons.search, color: primaryColor),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30),
+                            borderSide: BorderSide.none,
+                          ),
+                          filled: true,
+                          fillColor: isDarkMode ? Colors.grey[800] : Colors.brown[50],
                         ),
-                        filled: true,
-                        fillColor: isDarkMode ? Colors.grey[800] : Colors.brown[50],
+                        onSubmitted: _onSearchAction,
                       ),
-                      onSubmitted: _onSearchAction,
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: () => _onSearchAction(_controller.text),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30)),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () => _onSearchAction(_controller.text),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30)),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                      ),
+                      child: const Text("Ask", style: TextStyle(fontSize: 16)),
                     ),
-                    child: const Text("Ask", style: TextStyle(fontSize: 16)),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              if (_isLoading)
-                Center(
-                  child: SizedBox(
-                    height: 300,
-                    width: 300,
-                    child: Lottie.asset(
-                      'assets/animations/Wave Loop.json',
-                      repeat: true,
-                      animate: true,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                )
-              else ...[
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    "Religious Insights:",
-                    style: GoogleFonts.merriweather(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: onSurfaceColor,
-                    ),
-                  ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                SizedBox(height: 220, child: _buildPieChart(isDarkMode)),
-                const SizedBox(height: 20),
-                _buildReligionCard(isDarkMode),
+                const SizedBox(height: 24),
+                if (_isLoading)
+                  Center(
+                    child: SizedBox(
+                      height: 300,
+                      width: 300,
+                      child: Lottie.asset(
+                        'assets/animations/Wave Loop.json',
+                        repeat: true,
+                        animate: true,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  )
+                else ...[
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "Religious Insights:",
+                      style: GoogleFonts.merriweather(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: onSurfaceColor,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(height: 220, child: _buildPieChart(isDarkMode)),
+                  const SizedBox(height: 20),
+                  _buildReligionCard(isDarkMode),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -207,7 +215,7 @@ class _SearchPageState extends State<SearchPage> {
   Widget _buildPieChart(bool isDarkMode) {
     final religionColors = {
       "Hindu": Colors.orange,
-      "Christian": Colors.blue,
+      "Christian": Colors.white,
       "Islam": Colors.green
     };
 
@@ -218,12 +226,12 @@ class _SearchPageState extends State<SearchPage> {
           return PieChartSectionData(
             value: entry.value,
             color: religionColors[entry.key] ?? Colors.grey,
-            radius: _selectedReligionIndex == i ? 90 : 70,
+            radius: _selectedReligionIndex == i ? 100: 80,
             title: entry.key,
             titleStyle: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: isDarkMode ? Colors.white : Colors.black,
+              color: isDarkMode ? Colors.blueGrey : Colors.black,
             ),
           );
         }),
@@ -274,6 +282,7 @@ class _SearchPageState extends State<SearchPage> {
               religionName: religionName,
               searchQuery: _controller.text,
               results: _structuredResults[religionName] ?? [],
+              insightsApiUrl: insightsUrl,
             ),
           ),
         );

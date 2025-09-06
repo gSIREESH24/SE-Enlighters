@@ -1,18 +1,22 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:translator/translator.dart';
+import 'package:http/http.dart' as http;
 
 class ResultsPage extends StatefulWidget {
   final String religionName;
   final String searchQuery;
   final List<String> results;
+  final String insightsApiUrl;
 
   const ResultsPage({
     super.key,
     required this.religionName,
     required this.searchQuery,
     required this.results,
+    required this.insightsApiUrl,
   });
 
   @override
@@ -30,15 +34,22 @@ class _ResultsPageState extends State<ResultsPage> {
   int currentChunkIndex = 0;
 
   Map<String, List<String>> translatedResults = {};
+  Map<String, dynamic>? insightsData;
+  bool isLoadingInsights = false;
 
   @override
   void initState() {
     super.initState();
 
+    translatedResults["en"] = widget.results;
+    _setupTTS();
+    _fetchInsights();
+  }
+
+  void _setupTTS() {
     _flutterTts.setCompletionHandler(() async {
       if (currentChunkIndex + 1 < chunks.length && isSpeaking) {
         currentChunkIndex++;
-        setState(() {});
         await _flutterTts.speak(chunks[currentChunkIndex]);
       } else {
         setState(() {
@@ -67,15 +78,32 @@ class _ResultsPageState extends State<ResultsPage> {
         chunks = [];
       });
     });
-
-    // Initialize with English
-    translatedResults["en"] = widget.results;
   }
 
-  @override
-  void dispose() {
-    _flutterTts.stop();
-    super.dispose();
+  Future<void> _fetchInsights() async {
+    setState(() => isLoadingInsights = true);
+
+    try {
+      final response = await http.post(
+        Uri.parse(widget.insightsApiUrl),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"question": widget.searchQuery}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() => insightsData = data);
+      } else {
+        throw Exception("Failed to fetch insights: ${response.statusCode}");
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("Error fetching insights: $e")));
+      }
+    } finally {
+      setState(() => isLoadingInsights = false);
+    }
   }
 
   Future<void> _translateIfNeeded(String lang) async {
@@ -131,48 +159,67 @@ class _ResultsPageState extends State<ResultsPage> {
     await _flutterTts.speak(chunks[currentChunkIndex]);
   }
 
-  List<InlineSpan> _buildHighlightedText(
-      String text, Color normalColor, Color highlightColor) {
-    final textChunks = text.split(RegExp(r'(?<=[.?!])\s+'));
-    List<InlineSpan> spans = [];
+  List<Widget> _buildHighlightedParagraphs(String text, Color normalColor) {
+    final paragraphs = text.split(RegExp(r'(?=\d+\.\s)'));
+    List<Widget> widgets = [];
 
-    for (int i = 0; i < textChunks.length; i++) {
-      spans.add(TextSpan(
-        text: textChunks[i] + ' ',
-        style: GoogleFonts.lato(
-          fontSize: 16,
-          height: 1.5,
-          color: (isSpeaking &&
-              currentlyReadingIndex != null &&
-              i == currentChunkIndex)
-              ? highlightColor
-              : normalColor,
-          fontWeight: (isSpeaking &&
-              currentlyReadingIndex != null &&
-              i == currentChunkIndex)
-              ? FontWeight.bold
-              : FontWeight.normal,
-        ),
+    for (final paragraph in paragraphs) {
+      if (paragraph.trim().isEmpty) continue;
+
+      final textChunks = paragraph.split(RegExp(r'(?<=[.?!])\s+'));
+      List<InlineSpan> spans = [];
+
+      for (String chunk in textChunks) {
+        final regex = RegExp(r'"(.*?)"');
+        int lastMatchEnd = 0;
+        List<InlineSpan> chunkSpans = [];
+
+        for (final match in regex.allMatches(chunk)) {
+          if (match.start > lastMatchEnd) {
+            chunkSpans.add(TextSpan(
+              text: chunk.substring(lastMatchEnd, match.start),
+              style: GoogleFonts.lato(fontSize: 16, height: 1.6, color: normalColor),
+            ));
+          }
+
+          chunkSpans.add(TextSpan(
+            text: chunk.substring(match.start, match.end),
+            style: GoogleFonts.lato(
+                fontSize: 16, height: 1.6, color: Colors.deepOrange, fontWeight: FontWeight.bold),
+          ));
+
+          lastMatchEnd = match.end;
+        }
+
+        if (lastMatchEnd < chunk.length) {
+          chunkSpans.add(TextSpan(
+            text: chunk.substring(lastMatchEnd),
+            style: GoogleFonts.lato(fontSize: 16, height: 1.6, color: normalColor),
+          ));
+        }
+
+        spans.add(TextSpan(children: chunkSpans));
+        spans.add(const TextSpan(text: " "));
+      }
+
+      widgets.add(Padding(
+        padding: const EdgeInsets.only(bottom: 14),
+        child: RichText(text: TextSpan(children: spans)),
       ));
     }
 
-    return spans;
+    return widgets;
   }
 
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final normalTextColor =
-        Theme.of(context).textTheme.bodyLarge?.color ??
-            (isDarkMode ? Colors.white70 : Colors.black87);
-    final highlightTextColor =
-    isDarkMode ? Colors.amber[300]! : Colors.brown.shade700;
+    final normalTextColor = Theme.of(context).textTheme.bodyLarge?.color ??
+        (isDarkMode ? Colors.white70 : Colors.black87);
 
-    final displayResults =
-        translatedResults[selectedLanguage] ?? widget.results;
+    final displayResults = translatedResults[selectedLanguage] ?? widget.results;
 
-    final hasRelevantData =
-    !(displayResults.length == 1 &&
+    final hasRelevantData = !(displayResults.length == 1 &&
         displayResults.first == "Question Asked is Not Relevant!");
 
     return Scaffold(
@@ -200,62 +247,120 @@ class _ResultsPageState extends State<ResultsPage> {
           )
         ],
       ),
-      body: Container(
-        padding: const EdgeInsets.all(16.0),
-        child: displayResults.isEmpty
-            ? Center(
-            child: Text("No data found",
-                style: TextStyle(color: normalTextColor)))
-            : !hasRelevantData
-            ? Center(
-            child: Text("Question Asked is Not Relevant!",
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: highlightTextColor)))
-            : ListView.builder(
-          itemCount: displayResults.length,
-          itemBuilder: (context, index) {
-            final text = displayResults[index];
-            return Card(
-              color: isDarkMode ? Colors.grey[850] : Colors.white,
-              margin: const EdgeInsets.symmetric(vertical: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    RichText(
-                      text: TextSpan(
-                        children: _buildHighlightedText(
-                            text, normalTextColor, highlightTextColor),
+      body: Column(
+        children: [
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(16.0),
+              child: displayResults.isEmpty
+                  ? Center(
+                  child: Text("No data found", style: TextStyle(color: normalTextColor)))
+                  : !hasRelevantData
+                  ? Center(
+                  child: Text("Question Asked is Not Relevant!",
+                      style: TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.w600, color: Colors.brown)))
+                  : ListView.builder(
+                itemCount: displayResults.length,
+                itemBuilder: (context, index) {
+                  final text = displayResults[index];
+                  return Card(
+                    color: isDarkMode ? Colors.grey[850] : Colors.white,
+                    margin: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ..._buildHighlightedParagraphs(text, normalTextColor),
+                          const SizedBox(height: 10),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: ElevatedButton.icon(
+                              onPressed: () => _toggleSpeak(text, index),
+                              icon: Icon(currentlyReadingIndex == index && isSpeaking
+                                  ? Icons.stop
+                                  : Icons.volume_up),
+                              label: Text(currentlyReadingIndex == index && isSpeaking
+                                  ? "Stop"
+                                  : "Read"),
+                            ),
+                          )
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: ElevatedButton.icon(
-                        onPressed: () => _toggleSpeak(text, index),
-                        icon: Icon(
-                            currentlyReadingIndex == index &&
-                                isSpeaking
-                                ? Icons.stop
-                                : Icons.volume_up),
-                        label: Text(
-                            currentlyReadingIndex == index &&
-                                isSpeaking
-                                ? "Stop"
-                                : "Read"),
-                      ),
-                    )
-                  ],
-                ),
+                  );
+                },
               ),
-            );
-          },
+            ),
+          ),
+
+          if (hasRelevantData)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                ),
+                onPressed: isLoadingInsights
+                    ? null
+                    : () {
+                  if (insightsData != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              ComparativeInsightsPage(data: insightsData!)),
+                    );
+                  }
+                },
+                child: isLoadingInsights
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text("View Comparative Insights"),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+
+class ComparativeInsightsPage extends StatelessWidget {
+  final Map<String, dynamic> data;
+
+  const ComparativeInsightsPage({super.key, required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Comparative Insights")),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: ListView(
+          children: [
+            Text("Topic: ${data['topic'] ?? ''}", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            ...((data['results'] ?? []) as List).map((religion) {
+              return Card(
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("${religion['religion']}", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      Text("${religion['overallSummary']}", style: const TextStyle(fontSize: 16)),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ],
         ),
       ),
     );
