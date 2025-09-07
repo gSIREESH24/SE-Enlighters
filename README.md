@@ -165,11 +165,11 @@ Firebase Authentication ensures secure user access.
 
 * Co-developed backend (with Yashwin)
 
-* Specialized in Google Vision OCR
-
 * Integrated Firebase Authentication (with Mohammed)
 
 * Co-managed Firestore (with Yashwin)
+
+* DataProcessing of Holy Books
 
 
 ### Mohammed Owais Shaik (CS24B040)
