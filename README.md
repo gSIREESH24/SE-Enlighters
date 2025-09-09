@@ -156,7 +156,9 @@ Firebase Authentication ensures secure user access.
 
 * Bridged frontend & backend
 
-* Developed UI and tested features (with Mohammed)
+* Contributed to UI development
+
+* Conducted testing and bug fixing (with Mohammed)
 
 * Built multilingual read-aloud (with Yashwin)
 
